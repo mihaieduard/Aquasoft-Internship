@@ -85,6 +85,8 @@ async function fetchDataAsync() {
 }
 fetchDataAsync();
 
+
+
 // 1.8
 function counter():() => number {
   console.log("Script running...");
@@ -96,4 +98,58 @@ const myCounter = counter();
 console.log(myCounter()); // 1
 console.log(myCounter()); // 2
 
-// 1.9
+// 
+
+// Tipuri pentru utilizator și serviciile acestuia
+interface User {
+  userId: number;
+  username: string;
+}
+
+// Funcția getUser cu tipuri
+function getUser(userId: number): Promise<User> {
+  return new Promise((resolve, reject) => {
+    console.log('Get user from the database.');
+    setTimeout(() => {
+      resolve({
+        userId: userId,
+        username: 'john',
+      });
+    }, 1000);
+  });
+}
+
+// Funcția getServices cu tipuri
+function getServices(user: User): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    console.log(`Get services of ${user.username} from the API.`);
+    setTimeout(() => {
+      resolve(['Email', 'VPN', 'CDN']);
+    }, 2 * 1000);
+  });
+}
+
+// Funcția getServiceCost cu tipuri
+function getServiceCost(services: string[]): Promise<number> {
+  return new Promise((resolve, reject) => {
+    console.log(`Calculate service costs of ${services}.`);
+    setTimeout(() => {
+      resolve(services.length * 100);
+    }, 3 * 1000);
+  });
+}
+
+// Funcția asincronă cu tipuri
+async function showServiceCost(): Promise<void> {
+  try {
+    const user: User = await getUser(100); // Tipul User este clar definit
+    const services: string[] = await getServices(user); // Tipul string[] pentru servicii
+    const cost: number = await getServiceCost(services); // Tipul number pentru cost
+    console.log(`The service cost is ${cost}`);
+  } catch (error) {
+    console.error('An error occurred:', error);
+  }
+}
+
+// Apelul funcției
+showServiceCost();
