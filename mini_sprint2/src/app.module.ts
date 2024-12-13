@@ -1,22 +1,28 @@
-import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { HotelsModule } from './hotels/hotels.module';
-import { AuthModule } from './auth/auth.module';
+import { Module } from '@nestjs/common';
+import { Hotel } from './hotels/entities/hotel.model';
+import { PriceOffer } from './hotels/entities/priceOffer.model';
+import { HotelsModule } from './hotels/hotels.module'; // Add this import
+import { Airport } from './hotels/entities/airports.model'; // Add this import
+import { Region } from './hotels/entities/region.model'; // Add this import
+import { City } from './hotels/entities/city.model'; // Add this import
+import { HotelGroup } from './hotels/entities/hotelGroup.model'; // Add this import
+import { Zone } from './hotels/entities/zone.model'; // Add this import
 
 @Module({
   imports: [
     SequelizeModule.forRoot({
       dialect: 'mysql',
-      host: '127.0.0.1',
+      host: 'localhost',
       port: 3306,
-      username: 'root', // replace with your MySQL username
-      password: '458900', // replace with your MySQL password
-      database: 'HotelDB',
+      username: 'root',
+      password: '458900',
+      database: 'hoteldb',
+      models: [Hotel, PriceOffer, Airport, Region, City, HotelGroup, Zone],
       autoLoadModels: true,
       synchronize: true,
     }),
-    AuthModule,
-    HotelsModule,
+    HotelsModule, // Add this line
   ],
 })
 export class AppModule {}

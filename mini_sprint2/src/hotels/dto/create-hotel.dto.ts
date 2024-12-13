@@ -5,5 +5,6 @@ export class CreateHotelDto {
     readonly RegionID: number;
     readonly CityID: number;
     readonly Address: string;
+    readonly GroupID: number;
   }
   

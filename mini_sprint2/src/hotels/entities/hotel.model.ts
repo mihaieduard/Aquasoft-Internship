@@ -1,6 +1,7 @@
-import { Column, DataType, ForeignKey, Model, Table, BelongsTo } from 'sequelize-typescript';
+import { Column, DataType, ForeignKey, Model, Table, BelongsTo, HasMany } from 'sequelize-typescript';
 import { Region } from './region.model';
 import { City } from './city.model';
+import { PriceOffer } from './priceOffer.model';
 
 @Table({ tableName: 'Hotels', timestamps: false }) // No timestamps needed
 export class Hotel extends Model<Hotel> {
@@ -30,4 +31,7 @@ export class Hotel extends Model<Hotel> {
 
   @Column(DataType.TEXT)
   Address: string;
+
+  @HasMany(() => PriceOffer)
+  PriceOffers: PriceOffer[];
 }
