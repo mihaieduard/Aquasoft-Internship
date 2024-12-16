@@ -8,6 +8,7 @@ import { Region } from './hotels/entities/region.model'; // Add this import
 import { City } from './hotels/entities/city.model'; // Add this import
 import { HotelGroup } from './hotels/entities/hotelGroup.model'; // Add this import
 import { Zone } from './hotels/entities/zone.model'; // Add this import
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { Zone } from './hotels/entities/zone.model'; // Add this import
       synchronize: true,
     }),
     HotelsModule, // Add this line
+    AuthModule,
   ],
 })
 export class AppModule {}
