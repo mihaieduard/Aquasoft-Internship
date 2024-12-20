@@ -10,7 +10,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { Region } from '../entities/region.entity';
 import { Zone } from '../entities/zone.entity';
 import { HotelGroup } from '../entities/hotelGroup.entity';
-
+import { BlacklistGuard } from '../auth/blacklist.guard';
+import { AuthModule } from '../auth/auth.module'; // Import AuthModule here
 
 @Module({
   imports: [
@@ -23,9 +24,10 @@ import { HotelGroup } from '../entities/hotelGroup.entity';
       Zone,
       HotelGroup
     ]),
-    JwtModule
+    JwtModule,
+    AuthModule, // Add this line to import AuthModule
   ],
   controllers: [HotelsController],
-  providers: [HotelsService],
+  providers: [HotelsService, BlacklistGuard],
 })
 export class HotelsModule {}

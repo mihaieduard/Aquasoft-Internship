@@ -20,6 +20,9 @@ export class PriceOffer extends Model<PriceOffer> {
   @Column(DataType.DECIMAL(10, 2))
   Price: number;
 
+  @Column(DataType.STRING)
+  Category: string;
+
   @BelongsTo(() => Hotel)
   hotel: Hotel;
 }

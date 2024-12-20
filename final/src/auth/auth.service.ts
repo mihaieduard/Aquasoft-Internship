@@ -11,6 +11,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { Role } from  '../entities/roles.entity';
+import { TokenBlacklist } from '../entities/token-blacklist.entity';
 
 
 
@@ -23,7 +24,30 @@ export class AuthService {
     private readonly userModel: typeof User,
     @InjectModel(Role)
     private readonly roleModel: typeof Role,
+    @InjectModel(TokenBlacklist)
+    private tokenBlacklistModel: typeof TokenBlacklist,
   ) {}
+
+  async logout(token: string) {
+    // Decode token to get expiration
+    const decoded = this.jwtService.decode(token);
+    const expiresAt = new Date(decoded['exp'] * 1000);
+
+    // Add token to blacklist
+    await this.tokenBlacklistModel.create({
+      token,
+      expiresAt,
+    });
+
+    return { message: 'Successfully logged out' };
+  }
+
+  async isTokenBlacklisted(token: string): Promise<boolean> {
+    const blacklistedToken = await this.tokenBlacklistModel.findOne({
+      where: { token }
+    });
+    return !!blacklistedToken;
+  }
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.userModel.findOne({ 
@@ -50,7 +74,6 @@ export class AuthService {
     console.log('Result after password removal:', JSON.stringify(result, null, 2)); // Add this debug line
     return result;
 }
-
 async generateToken(user: any): Promise<string> {
     const payload = {
         email: user.email,
@@ -68,12 +91,14 @@ async login(loginDto: LoginDto) {
         sub: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role.RoleName  // Make sure to include the role name
+        role: user.role.RoleName,  // Include role name
+        RoleId: user.RoleId       // Add this line - include RoleId
     };
-
+    
     return {
+      
         user,
-        access_token: await this.generateToken(payload),
+        access_token: await this.jwtService.sign(payload), // Sign directly instead of calling generateToken
     };
 }
   // auth/auth.service.ts

@@ -1,4 +1,4 @@
-import { Table, Column, Model, BeforeCreate, DataType, PrimaryKey, AutoIncrement, CreatedAt, BelongsTo, ForeignKey } from 'sequelize-typescript';
+import { Table, HasMany, Column, Model, BeforeCreate, DataType, PrimaryKey, AutoIncrement, CreatedAt, BelongsTo, ForeignKey } from 'sequelize-typescript';
 import { IsEmail } from 'class-validator';
 import * as bcrypt from 'bcrypt';
 import { Role } from './roles.entity';
@@ -32,11 +32,20 @@ export class User extends Model {
     RoleId: number;
 
     @BelongsTo(() => Role)
-    role: Role
-    
+    role: Role;
+
+    @ForeignKey(() => User)
+    @Column(DataType.INTEGER)
+    ManagerId: number;  // Managerul acestui utilizator
+
+    @BelongsTo(() => User)
+    manager: User;  // Managerul utilizatorului (auto-referent)
+
+    @HasMany(() => User)
+    subordinates: User[];  // Subordonații acestui utilizator (folosit pentru manageri)
+
     @BeforeCreate
     static async hashPassword(instance: User) {
         instance.password = await bcrypt.hash(instance.password, 8);
     }
 }
-

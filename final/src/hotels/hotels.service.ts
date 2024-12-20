@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ValidationPipe } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript'; // Import Sequelize
 import { Hotel } from '../entities/hotel.entity';
 import { Airport } from '../entities/airports.entity';
 import { PriceOffer } from '../entities/priceOffer.entity';
+import { User } from 'src/entities/user.entity';
+import { RequestHeader } from './pipes/request=header'; // Ensure this module exists or remove if not needed
 
 @Injectable()
 export class HotelsService {
@@ -29,18 +31,65 @@ export class HotelsService {
     return this.hotelModel.create(createDto);
   }
 
-  async update(id: number, updateDto: any): Promise<[number, Hotel[]]> {
-    return this.hotelModel.update(updateDto, {
-      where: { HotelID: id },
-      returning: true,
-    });
-  }
+  async update(
+    id: number,
+    updateDto: any,
+    user,
+    userId: number,
+): Promise<[number, Hotel[]]> {
+    const hotel = await this.hotelModel.findOne({ where: { HotelID: id } });
 
-  async remove(id: number): Promise<void> {
+    if (!hotel) {
+        throw new NotFoundException(`Hotel with ID ${id} not found`);
+    }
+
+    // Check if the user is authorized to update the hotel
+    if (user.RoleId === 1 && hotel.ManagerId !== userId) {
+        throw new BadRequestException(`You are not authorized to update this hotel`);
+    }
+
+    if (user.RoleId === 2 && hotel.ManagerGroupId !== userId) {
+        throw new BadRequestException(`You are not authorized to update this hotel`);
+    }
+
+    // Proceed with the update
+    const [affectedRows, updatedHotels] = await this.hotelModel.update(updateDto, {
+        where: { HotelID: id },
+        returning: true,
+    });
+
+    if (affectedRows === 0) {
+        throw new BadRequestException(`Failed to update the hotel`);
+    }
+
+    return [affectedRows, updatedHotels];
+}
+
+  
+
+
+  async remove(id: number, user:User, userId): Promise<void> {
+    if (user.RoleId == 1) {
+      const hotel = await this.hotelModel.findOne({ where: { HotelID: id } });
+      console.log(userId);
+      if (hotel.ManagerId !== userId) {
+        // throw new NotFoundException(`Hotel with ID ${id} not found`);
+        throw new BadRequestException(`You are not authorized to delete this hotel`);
+      }
+    } else if (user.RoleId == 2) {
+      const hotel = await this.hotelModel.findOne({ where: { HotelID: id } });
+      if (hotel.ManagerGroupId !== userId) {
+        // throw new NotFoundException(`Hotel with ID ${id} not found`);
+        throw new BadRequestException(`You are not authorized to delete this hotel`);
+      }
+    } else if (user.RoleId == 4) {
+      // Add any specific logic for RoleId 4 if needed
+    }
     const result = await this.hotelModel.destroy({ where: { HotelID: id } });
     if (result === 0) {
       throw new NotFoundException(`Hotel with ID ${id} not found`);
     }
+    
   }
 
   async findBestOffersNearAirport(airportId: number, radius: number, maxScore: number, p1: number = 0.5, p2: number = 0.5): Promise<any> {

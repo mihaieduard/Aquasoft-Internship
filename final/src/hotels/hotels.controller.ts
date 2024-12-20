@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Request } from '@nestjs/common';
+import { BlacklistGuard } from '../auth/blacklist.guard'; // Import BlacklistGuard
 import { HotelsService } from './hotels.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // Import this if you're implementing JWT authentication
 import { CreateHotelDto } from './dto/create-hotel.dto';
@@ -11,7 +12,7 @@ export class HotelsController {
   constructor(private readonly hotelsService: HotelsService) {}
     
   @Get()
-  @UseGuards(JwtAuthGuard) // Use this line if you want this route to be protected
+  @UseGuards(JwtAuthGuard, BlacklistGuard) // Use this line if you want this route to be protected
   getAllHotels() {
     console.log('Getting all hotels');
     return this.hotelsService.findAll();
@@ -55,24 +56,27 @@ export class HotelsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
-  @Roles(Role.HOTEL_MANAGER, Role.GROUP_MANAGER)
+  @UseGuards(JwtAuthGuard, RolesGuard, BlacklistGuard)
+  @Roles(Role.ADMINISTRATOR, Role.HOTEL_MANAGER, Role.GROUP_MANAGER, Role.DATA_OPERATOR)
   createHotel(@Body() createDto: CreateHotelDto) {
     return this.hotelsService.create(createDto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  updateHotel(@Param('id') id: number, @Body() updateDto: any) {
-    return this.hotelsService.update(id, updateDto);
+  @Roles(Role.ADMINISTRATOR, Role.HOTEL_MANAGER, Role.GROUP_MANAGER)
+  updateHotel(@Param('id') id: number, @Body() updateDto: any, @Request() req) {
+    const userId = req.user.sub;
+    console.log('User ID:', userId);
+
+    return this.hotelsService.update(id, updateDto, req.user, userId);
   }
 
   @Delete(':id')
-  @Roles(Role.ADMINISTRATOR)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  deleteHotel(@Param('id') id: number) {
-    return this.hotelsService.remove(id);
-  }
-
-  
+  @Roles(Role.ADMINISTRATOR, Role.HOTEL_MANAGER, Role.GROUP_MANAGER)
+  @UseGuards(JwtAuthGuard, RolesGuard, BlacklistGuard)
+  deleteHotel(@Param('id') id: number, @Request() req) {
+    const userId = req.user.sub;
+    return this.hotelsService.remove(id, req.user, userId);
+  }  
 }

@@ -11,4 +11,7 @@ export class HotelGroup extends Model<HotelGroup> {
 
   @Column(DataType.STRING)
   GroupName: string;
+
+  @Column(DataType.STRING)
+  Headquarters: string;
 }
